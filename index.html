@@ -28,7 +28,7 @@ button:hover { background:#219150 }
   <input id="inpDetails" placeholder="Details">
   <input id="inpAmount" type="number" placeholder="Amount">
   <input id="inpCredit" type="number" placeholder="Credit">
-  <button onclick="addRow()">Add</button>
+  <button type="button" onclick="addRow()">Add</button>
 </div>
 
 <table>
@@ -46,7 +46,7 @@ button:hover { background:#219150 }
 </table>
 
 <br>
-<button onclick="exportAndSave()">Export Excel & Save</button>
+<button type="button" onclick="exportAndSave()">Export Excel & Save</button>
 
 <p align="center">
 Total Expense: ₹<span id="te">0</span> |
@@ -115,13 +115,13 @@ function exportAndSave() {
     });
   }
 
-  // ✅ SAVE TO GOOGLE SHEET
+  // Save to Google Sheet
   fetch(WEB_APP_URL, {
     method: "POST",
     body: JSON.stringify(data)
   });
 
-  // ✅ STANDARD CSV EXPORT
+  // Export CSV (Excel standard)
   let csv = "Sr No,Name,Date,Details,Amount,Credit\n";
   data.forEach(r => {
     csv += `${r.srno},"${r.name}",${r.date},"${r.details}",${r.amount},${r.credit}\n`;
@@ -139,4 +139,3 @@ function exportAndSave() {
 
 </body>
 </html>
-
