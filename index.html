@@ -23,15 +23,15 @@ button:hover { background:#219150 }
 <h2>Expense Manager</h2>
 
 <div class="form">
-  <input id="name" placeholder="Name">
-  <input id="date" type="date">
-  <input id="details" placeholder="Details">
-  <input id="amount" type="number" placeholder="Amount">
-  <input id="credit" type="number" placeholder="Credit">
-  <button onclick="add()">Add</button>
+  <input id="inpName" placeholder="Name">
+  <input id="inpDate" type="date">
+  <input id="inpDetails" placeholder="Details">
+  <input id="inpAmount" type="number" placeholder="Amount">
+  <input id="inpCredit" type="number" placeholder="Credit">
+  <button onclick="addRow()">Add</button>
 </div>
 
-<table id="table">
+<table>
 <thead>
 <tr>
   <th>Sr No</th>
@@ -42,7 +42,7 @@ button:hover { background:#219150 }
   <th>Credit</th>
 </tr>
 </thead>
-<tbody id="body"></tbody>
+<tbody id="tbody"></tbody>
 </table>
 
 <br>
@@ -57,74 +57,86 @@ Balance: ₹<span id="bal">0</span>
 <script>
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwiye5jSCmCqqHJJYf3hXmAfIUoCY9l9A63bHdUtAdWfrNV-UeeeIcAlAewjKGjCqLCrg/exec";
 
-let sr=0, te=0, tc=0;
+let sr = 0, te = 0, tc = 0;
 
-function add() {
-  if(!name.value || !date.value){
-    alert("Name & Date required"); return;
+function addRow() {
+  const name = document.getElementById("inpName").value.trim();
+  const date = document.getElementById("inpDate").value;
+  const details = document.getElementById("inpDetails").value.trim();
+  const amount = Number(document.getElementById("inpAmount").value) || 0;
+  const credit = Number(document.getElementById("inpCredit").value) || 0;
+
+  if (!name || !date) {
+    alert("Name and Date required");
+    return;
   }
 
   sr++;
-  const r = body.insertRow();
-  r.insertCell(0).innerText = sr;
-  r.insertCell(1).innerText = name.value;
-  r.insertCell(2).innerText = date.value;
-  r.insertCell(3).innerText = details.value;
-  r.insertCell(4).innerText = amount.value || 0;
-  r.insertCell(5).innerText = credit.value || 0;
+  const tbody = document.getElementById("tbody");
+  const row = tbody.insertRow();
 
-  te += Number(amount.value||0);
-  tc += Number(credit.value||0);
+  row.insertCell(0).innerText = sr;
+  row.insertCell(1).innerText = name;
+  row.insertCell(2).innerText = date;
+  row.insertCell(3).innerText = details;
+  row.insertCell(4).innerText = amount;
+  row.insertCell(5).innerText = credit;
 
-  teSpan();
-  name.value=date.value=details.value=amount.value=credit.value="";
+  te += amount;
+  tc += credit;
+
+  document.getElementById("te").innerText = te;
+  document.getElementById("tc").innerText = tc;
+  document.getElementById("bal").innerText = tc - te;
+
+  document.getElementById("inpName").value = "";
+  document.getElementById("inpDate").value = "";
+  document.getElementById("inpDetails").value = "";
+  document.getElementById("inpAmount").value = "";
+  document.getElementById("inpCredit").value = "";
 }
 
-function teSpan(){
-  teEl.textContent = te;
-  tcEl.textContent = tc;
-  balEl.textContent = tc-te;
-}
-
-const teEl=document.getElementById("te");
-const tcEl=document.getElementById("tc");
-const balEl=document.getElementById("bal");
-
-function exportAndSave(){
-  if(body.rows.length===0){
-    alert("No data"); return;
+function exportAndSave() {
+  const tbody = document.getElementById("tbody");
+  if (tbody.rows.length === 0) {
+    alert("No data to export");
+    return;
   }
 
-  // 🔹 Prepare data for Google Sheet
-  const data=[...body.rows].map(r=>({
-    srno:r.cells[0].innerText,
-    name:r.cells[1].innerText,
-    date:r.cells[2].innerText,
-    details:r.cells[3].innerText,
-    amount:r.cells[4].innerText,
-    credit:r.cells[5].innerText
-  }));
+  const data = [];
+  for (let r of tbody.rows) {
+    data.push({
+      srno: r.cells[0].innerText,
+      name: r.cells[1].innerText,
+      date: r.cells[2].innerText,
+      details: r.cells[3].innerText,
+      amount: r.cells[4].innerText,
+      credit: r.cells[5].innerText
+    });
+  }
 
-  fetch(WEB_APP_URL,{
-    method:"POST",
-    body:JSON.stringify(data)
+  // ✅ SAVE TO GOOGLE SHEET
+  fetch(WEB_APP_URL, {
+    method: "POST",
+    body: JSON.stringify(data)
   });
 
-  // 🔹 Create STANDARD CSV
-  let csv="Sr No,Name,Date,Details,Amount,Credit\n";
-  data.forEach(r=>{
-    csv+=`${r.srno},"${r.name}",${r.date},"${r.details}",${r.amount},${r.credit}\n`;
+  // ✅ STANDARD CSV EXPORT
+  let csv = "Sr No,Name,Date,Details,Amount,Credit\n";
+  data.forEach(r => {
+    csv += `${r.srno},"${r.name}",${r.date},"${r.details}",${r.amount},${r.credit}\n`;
   });
 
-  const blob=new Blob([csv],{type:"text/csv"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="Expense_Report.csv";
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "Expense_Report.csv";
   a.click();
 
-  alert("Master Sheet Updated & Excel Downloaded");
+  alert("Saved to Master Sheet & Excel Downloaded");
 }
 </script>
 
 </body>
 </html>
+
