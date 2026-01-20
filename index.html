@@ -1,57 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Expense Manager</title>
 
 <style>
-body {
-    font-family: Arial;
-    background: #f4f6f8;
-    padding: 20px;
-}
-h2 { text-align: center; }
-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #fff;
-}
-th, td {
-    border: 1px solid #000;
-    padding: 6px;
-    text-align: center;
-}
-th {
-    background: #2c3e50;
-    color: #fff;
-}
-input, button {
-    padding: 6px;
-}
-.form-row {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-.form-row input { flex: 1; }
-button {
-    background: #27ae60;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-}
-button:hover { background: #219150; }
-.export-btn {
-    background: #2980b9;
-}
-.export-btn:hover {
-    background: #1f6690;
-}
-.summary {
-    margin-top: 15px;
-    font-weight: bold;
-    text-align: center;
-}
+body { font-family: Arial; background:#f4f6f8; padding:20px }
+h2 { text-align:center }
+table { width:100%; border-collapse:collapse; background:#fff }
+th,td { border:1px solid #000; padding:6px; text-align:center }
+th { background:#2c3e50; color:#fff }
+input,button { padding:6px }
+.form { display:flex; gap:10px; margin-bottom:15px }
+.form input { flex:1 }
+button { background:#27ae60; color:#fff; border:none; cursor:pointer }
+button:hover { background:#219150 }
 </style>
 </head>
 
@@ -59,134 +22,107 @@ button:hover { background: #219150; }
 
 <h2>Expense Manager</h2>
 
-<div class="form-row">
-    <input id="name" placeholder="Name">
-    <input id="date" type="date">
-    <input id="details" placeholder="Expense details">
-    <input id="amount" type="number" placeholder="Amount">
-    <input id="credit" type="number" placeholder="Credit">
-    <button onclick="addRow()">Add</button>
+<div class="form">
+  <input id="name" placeholder="Name">
+  <input id="date" type="date">
+  <input id="details" placeholder="Details">
+  <input id="amount" type="number" placeholder="Amount">
+  <input id="credit" type="number" placeholder="Credit">
+  <button onclick="add()">Add</button>
 </div>
 
-<table id="mainTable">
+<table id="table">
 <thead>
 <tr>
-    <th>Sr No</th>
-    <th>Name</th>
-    <th>Date</th>
-    <th>Details</th>
-    <th>Amount</th>
-    <th>Credit</th>
+  <th>Sr No</th>
+  <th>Name</th>
+  <th>Date</th>
+  <th>Details</th>
+  <th>Amount</th>
+  <th>Credit</th>
 </tr>
 </thead>
-<tbody id="tbody"></tbody>
+<tbody id="body"></tbody>
 </table>
 
 <br>
+<button onclick="exportAndSave()">Export Excel & Save</button>
 
-<button class="export-btn" onclick="exportAndSave()">
-Export Excel & Save to Master
-</button>
-
-<div class="summary">
-Total Expense: ₹ <span id="te">0</span> |
-Total Credit: ₹ <span id="tc">0</span> |
-Balance: ₹ <span id="bal">0</span>
-</div>
+<p align="center">
+Total Expense: ₹<span id="te">0</span> |
+Total Credit: ₹<span id="tc">0</span> |
+Balance: ₹<span id="bal">0</span>
+</p>
 
 <script>
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwiye5jSCmCqqHJJYf3hXmAfIUoCY9l9A63bHdUtAdWfrNV-UeeeIcAlAewjKGjCqLCrg/exec";
 
-let sr = 0, te = 0, tc = 0;
+let sr=0, te=0, tc=0;
 
-function addRow() {
-    const n = name.value.trim();
-    const d = date.value;
-    const det = details.value.trim();
-    const a = Number(amount.value) || 0;
-    const c = Number(credit.value) || 0;
+function add() {
+  if(!name.value || !date.value){
+    alert("Name & Date required"); return;
+  }
 
-    if (!n || !d) {
-        alert("Name and Date required");
-        return;
-    }
+  sr++;
+  const r = body.insertRow();
+  r.insertCell(0).innerText = sr;
+  r.insertCell(1).innerText = name.value;
+  r.insertCell(2).innerText = date.value;
+  r.insertCell(3).innerText = details.value;
+  r.insertCell(4).innerText = amount.value || 0;
+  r.insertCell(5).innerText = credit.value || 0;
 
-    sr++;
-    const r = tbody.insertRow();
-    r.insertCell(0).innerText = sr;
-    r.insertCell(1).innerText = n;
-    r.insertCell(2).innerText = d;
-    r.insertCell(3).innerText = det;
-    r.insertCell(4).innerText = a;
-    r.insertCell(5).innerText = c;
+  te += Number(amount.value||0);
+  tc += Number(credit.value||0);
 
-    te += a;
-    tc += c;
-
-    teSpan(); clearInputs();
+  teSpan();
+  name.value=date.value=details.value=amount.value=credit.value="";
 }
 
-function teSpan() {
-    teEl.textContent = te;
-    tcEl.textContent = tc;
-    balEl.textContent = tc - te;
+function teSpan(){
+  teEl.textContent = te;
+  tcEl.textContent = tc;
+  balEl.textContent = tc-te;
 }
 
-function clearInputs() {
-    name.value = date.value = details.value =
-    amount.value = credit.value = "";
-}
+const teEl=document.getElementById("te");
+const tcEl=document.getElementById("tc");
+const balEl=document.getElementById("bal");
 
-const teEl = document.getElementById("te");
-const tcEl = document.getElementById("tc");
-const balEl = document.getElementById("bal");
+function exportAndSave(){
+  if(body.rows.length===0){
+    alert("No data"); return;
+  }
 
-function exportAndSave() {
-    const rows = [...tbody.rows];
-    if (rows.length === 0) {
-        alert("No data");
-        return;
-    }
+  // 🔹 Prepare data for Google Sheet
+  const data=[...body.rows].map(r=>({
+    srno:r.cells[0].innerText,
+    name:r.cells[1].innerText,
+    date:r.cells[2].innerText,
+    details:r.cells[3].innerText,
+    amount:r.cells[4].innerText,
+    credit:r.cells[5].innerText
+  }));
 
-    // 1️⃣ SAVE TO GOOGLE SHEET
-    const data = rows.map(r => ({
-        srno: r.cells[0].innerText,
-        name: r.cells[1].innerText,
-        date: r.cells[2].innerText,
-        details: r.cells[3].innerText,
-        amount: r.cells[4].innerText,
-        credit: r.cells[5].innerText
-    }));
+  fetch(WEB_APP_URL,{
+    method:"POST",
+    body:JSON.stringify(data)
+  });
 
-    fetch(WEB_APP_URL, {
-        method: "POST",
-        body: JSON.stringify(data)
-    });
+  // 🔹 Create STANDARD CSV
+  let csv="Sr No,Name,Date,Details,Amount,Credit\n";
+  data.forEach(r=>{
+    csv+=`${r.srno},"${r.name}",${r.date},"${r.details}",${r.amount},${r.credit}\n`;
+  });
 
-    // 2️⃣ EXPORT INDIVIDUAL EXCEL
-    const html = `
-    <html><head><meta charset="UTF-8">
-    <style>
-    table{border-collapse:collapse}
-    td,th{border:1px solid #000;padding:6px}
-    </style></head>
-    <body>
-    <h3>Expense Report</h3>
-    ${mainTable.outerHTML}
-    <br>
-    Total Expense: ${te}<br>
-    Total Credit: ${tc}<br>
-    Balance: ${tc - te}
-    </body></html>`;
+  const blob=new Blob([csv],{type:"text/csv"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="Expense_Report.csv";
+  a.click();
 
-    const blob = new Blob([html],
-        {type:"application/vnd.ms-excel"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "Expense_Report.xls";
-    a.click();
-
-    alert("Saved to Master Sheet & Excel Downloaded");
+  alert("Master Sheet Updated & Excel Downloaded");
 }
 </script>
 
